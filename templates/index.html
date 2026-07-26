@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Descargar Reels de Facebook</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+  <main class="page">
+    <div class="card">
+
+      <header class="card__header">
+        <div class="logo-badge">FB</div>
+        <h1>Descargar Reels</h1>
+        <p class="subtitle">Pega el link de un Reel y descárgalo en la mejor calidad disponible.</p>
+      </header>
+
+      <!-- Vista principal: pegar link y descargar -->
+      <section id="input-view" class="view">
+        <label for="link-input" class="field-label">Link del Reel</label>
+        <textarea
+          id="link-input"
+          class="link-input"
+          placeholder="https://www.facebook.com/reel/..."
+          rows="3"
+        ></textarea>
+
+        <div class="button-row">
+          <button id="paste-btn" type="button" class="btn btn--secondary">
+            📋 Pegar
+          </button>
+          <button id="download-btn" type="button" class="btn btn--primary">
+            ⬇️ Descargar
+          </button>
+        </div>
+
+        <p id="error-message" class="error-message" hidden></p>
+
+        <div id="loading" class="loading" hidden>
+          <span class="spinner"></span>
+          <span>Descargando el video, esto puede tardar unos segundos…</span>
+        </div>
+      </section>
+
+      <!-- Vista de éxito -->
+      <section id="success-view" class="view" hidden>
+        <div class="success-icon">✅</div>
+        <h2>¡Video descargado con éxito!</h2>
+        <p class="subtitle">El video se guardó en la carpeta de Descargas de tu dispositivo.</p>
+        <button id="reset-btn" type="button" class="btn btn--primary btn--block">
+          Descargar otro Reel
+        </button>
+      </section>
+
+    </div>
+
+    <p class="footnote">
+      Solo funciona con Reels y videos públicos de Facebook.
+    </p>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
