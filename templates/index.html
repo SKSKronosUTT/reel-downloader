@@ -1,65 +1,151 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Descargar Reels de Facebook</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Descargador de Reels - Facebook</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <main class="page">
-    <div class="card">
-
-      <header class="card__header">
-        <div class="logo-badge">FB</div>
-        <h1>Descargar Reels</h1>
-        <p class="subtitle">Pega el link de un Reel y descárgalo en la mejor calidad disponible.</p>
-      </header>
-
-      <!-- Vista principal: pegar link y descargar -->
-      <section id="input-view" class="view">
-        <label for="link-input" class="field-label">Link del Reel</label>
-        <textarea
-          id="link-input"
-          class="link-input"
-          placeholder="https://www.facebook.com/reel/..."
-          rows="3"
-        ></textarea>
-
-        <div class="button-row">
-          <button id="paste-btn" type="button" class="btn btn--secondary">
-            📋 Pegar
-          </button>
-          <button id="download-btn" type="button" class="btn btn--primary">
-            ⬇️ Descargar
-          </button>
+    <div class="container">
+        <div class="card">
+            <h1>📱 Descargador de Reels</h1>
+            <p class="subtitle">Pega el enlace de un Reel de Facebook para descargarlo</p>
+            
+            <div id="mainScreen">
+                <div class="input-group">
+                    <input type="text" id="urlInput" placeholder="https://www.facebook.com/share/v/..." />
+                    <button id="pasteBtn" class="btn-paste" title="Pegar desde portapapeles">
+                        📋
+                    </button>
+                </div>
+                
+                <button id="downloadBtn" class="btn-download">
+                    ⬇️ Descargar
+                </button>
+                
+                <div id="loadingSpinner" class="spinner" style="display: none;">
+                    <div class="spinner-circle"></div>
+                    <p>Descargando video...</p>
+                </div>
+            </div>
+            
+            <div id="successScreen" style="display: none;">
+                <div class="success-icon">✅</div>
+                <h2 class="success-title">Descarga exitosa</h2>
+                <p class="success-message">El video se ha guardado en tu carpeta de descargas</p>
+                <button id="backBtn" class="btn-back">⬅️ Descargar otro video</button>
+            </div>
         </div>
-
-        <p id="error-message" class="error-message" hidden></p>
-
-        <div id="loading" class="loading" hidden>
-          <span class="spinner"></span>
-          <span>Descargando el video, esto puede tardar unos segundos…</span>
-        </div>
-      </section>
-
-      <!-- Vista de éxito -->
-      <section id="success-view" class="view" hidden>
-        <div class="success-icon">✅</div>
-        <h2>¡Video descargado con éxito!</h2>
-        <p class="subtitle">El video se guardó en la carpeta de Descargas de tu dispositivo.</p>
-        <button id="reset-btn" type="button" class="btn btn--primary btn--block">
-          Descargar otro Reel
-        </button>
-      </section>
-
     </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlInput = document.getElementById('urlInput');
+            const pasteBtn = document.getElementById('pasteBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const mainScreen = document.getElementById('mainScreen');
+            const successScreen = document.getElementById('successScreen');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const backBtn = document.getElementById('backBtn');
 
-    <p class="footnote">
-      Solo funciona con Reels y videos públicos de Facebook.
-    </p>
-  </main>
+            // Función para pegar desde portapapeles
+            pasteBtn.addEventListener('click', async function() {
+                try {
+                    const text = await navigator.clipboard.readText();
+                    urlInput.value = text;
+                    urlInput.style.borderColor = '#66a3ff';
+                    setTimeout(() => {
+                        urlInput.style.borderColor = '#ccc';
+                    }, 2000);
+                } catch (err) {
+                    alert('No se pudo acceder al portapapeles. Por favor, pega el enlace manualmente.');
+                }
+            });
 
-  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+            // Función para mostrar/ocultar estados
+            function showLoading() {
+                mainScreen.style.display = 'none';
+                successScreen.style.display = 'none';
+                loadingSpinner.style.display = 'block';
+            }
+
+            function showMainScreen() {
+                mainScreen.style.display = 'block';
+                successScreen.style.display = 'none';
+                loadingSpinner.style.display = 'none';
+                urlInput.value = '';
+                downloadBtn.disabled = false;
+            }
+
+            function showSuccess() {
+                mainScreen.style.display = 'none';
+                successScreen.style.display = 'block';
+                loadingSpinner.style.display = 'none';
+            }
+
+            // Función para descargar
+            downloadBtn.addEventListener('click', async function() {
+                const url = urlInput.value.trim();
+                
+                if (!url) {
+                    alert('Por favor, pega un enlace de Facebook Reel');
+                    return;
+                }
+
+                // Validar que sea una URL de Facebook
+                if (!url.includes('facebook.com') && !url.includes('fb.watch')) {
+                    alert('Por favor, ingresa una URL válida de Facebook');
+                    return;
+                }
+
+                showLoading();
+
+                try {
+                    const response = await fetch('/download', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ url: url })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        showSuccess();
+                    } else {
+                        alert('Error: ' + (data.error || 'No se pudo descargar el video'));
+                        showMainScreen();
+                    }
+                } catch (error) {
+                    alert('Error al conectar con el servidor: ' + error.message);
+                    showMainScreen();
+                }
+            });
+
+            // Botón para regresar
+            backBtn.addEventListener('click', function() {
+                showMainScreen();
+            });
+
+            // Permitir descargar con Enter
+            urlInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    downloadBtn.click();
+                }
+            });
+
+            // Validar URL mientras se escribe
+            urlInput.addEventListener('input', function() {
+                const url = this.value.trim();
+                if (url && (url.includes('facebook.com') || url.includes('fb.watch'))) {
+                    this.style.borderColor = '#66a3ff';
+                } else {
+                    this.style.borderColor = '#ccc';
+                }
+            });
+        });
+    </script>
 </body>
 </html>
